@@ -1,0 +1,31 @@
+
+.wfx-flex-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.wfx-textAlign-center {
+  text-align: center;
+}
+
+.wfx-align-vCenter {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.wfx-align-hCenter {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+
+  -ms-flex-direction: row;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+
+  -webkit-justify-content: center;
+  justify-content: center;
+}

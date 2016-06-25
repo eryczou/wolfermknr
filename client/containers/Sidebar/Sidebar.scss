@@ -1,0 +1,110 @@
+@import "../../styles/base/colors";
+@import "../../styles/base/variables";
+
+$sidebar-width: 330px;
+$topClickZone-height: 130px;
+$zIndex-level1: 900;
+$zIndex-level2: 990;
+
+.sidebar {
+  height: 100%;
+  position: fixed;
+  z-index: $wfx-zIndex-highest + $zIndex-level1;
+  top: 0;
+  right: 0;
+  background-color: $color-bg-third;
+}
+
+.header {
+  height: 40px;
+  border-bottom: 1px solid wheat;
+  box-shadow: 2px 0 3px whitesmoke;
+}
+
+.topClickZone {
+  position: absolute;
+  width: 100%;
+  height: $topClickZone-height;
+  z-index: $wfx-zIndex-highest + $zIndex-level1;
+}
+
+.contentWrapper {
+  width: $sidebar-width - 20px;
+  margin: 90px 10px 0 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.optionWrapper {
+  width: 100%;
+
+  .optionHeader {
+    width: 100%;
+    position: absolute;
+    top: 130px;
+    font-size: 25px;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .optionTitle {
+    width: 96px;
+    padding: 9px 6px;
+    cursor: pointer;
+    z-index: $wfx-zIndex-highest + $zIndex-level2;
+  }
+
+  .optionSubTitle {
+    width: 60px;
+    padding: 6px 0;
+    font-size: 13px;
+    cursor: pointer;
+    z-index: $wfx-zIndex-highest + $zIndex-level2;
+  }
+
+  .optionSlash {
+    color: #fff;
+    height: 24px;
+    padding: 0 7px;
+    font-size: 16px;
+    font-weight: bolder;
+  }
+
+
+}
+
+.toggleButton {
+  width: 28px;
+  height: 28px;
+  font-size: 28px;
+  margin-top: 6px;
+  margin-left: 2px;
+  margin-right: -10px;
+  color: $color-button-secondary;
+}
+
+@keyframes toggleButtonHoveringAnimation {
+  0% {
+    width: 40px;
+  }
+
+  100% {
+    width: 50px;
+  }
+}
+
+.onHovering {
+  animation-duration: 0.3s;
+  animation-name: toggleButtonHoveringAnimation;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-timing-function: linear;
+}
+
+.cursorShow {
+  cursor: pointer;
+}
+
+.cursorHide {
+  cursor: e-resize;
+}

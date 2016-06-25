@@ -1,0 +1,27 @@
+.registerContainer {
+  width: 100%;
+  padding-top: 65px;
+}
+
+.statusText {
+  color: floralwhite;
+}
+
+.submitButtonRow {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.strengthBarWrapper {
+  position: absolute;
+  width: 100%;
+  margin-top: -16px;
+  padding-right: 20px;
+
+  .strengthBar {
+    height: 3px;
+  }
+}
+
+

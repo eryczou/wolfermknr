@@ -1,0 +1,58 @@
+@import "../../styles/base/breakdown";
+@import "../../styles/base/colors";
+
+
+$wfx-navbar-height: 45px;
+
+.navbarContainer {
+  width: 100%;
+  height: $wfx-navbar-height;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+  border: solid #eee;
+  border-width: 1px 0;
+}
+
+.listWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+
+.link {
+  height: $wfx-navbar-height;
+  padding-top: 6px;
+  font: 20px/1.6 "Coustard", Georgia, serif;
+  color: #333;
+
+  @include mixin-mq(medium) {
+    padding-top: 8px;
+    font-size: 18px;
+  }
+
+  @include mixin-mq(small) {
+    padding-top: 10px;
+    font-size: 14px;
+  }
+}
+
+.button {
+  margin: 8px 10px 0 0;
+  padding: 4px 5px;
+}
+
+.sidebarButtonWrapper {
+  position: relative;
+  float: right;
+  height: 100%;
+  display: flex;
+}
+
+.sidebarButton {
+  width: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+

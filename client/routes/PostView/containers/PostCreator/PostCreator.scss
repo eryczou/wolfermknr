@@ -1,0 +1,23 @@
+
+.postCreator {
+  padding: 0 20px;
+}
+
+.title {
+  margin-bottom: 30px;
+}
+
+.postForm {
+  width: 256px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  .postFormTitle {
+    text-align: center;
+  }
+}
+
+
+
