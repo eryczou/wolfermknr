@@ -4,47 +4,30 @@ import mongoose from 'mongoose'
 /**
  * User Schema
  */
-var UserSchema = new mongoose.Schema({
-  userId: {
-    type: Number,
-    required: true
-  },
-  role: {
-    type: Number,
-    min: 0,
-    max: 3
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  userName: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  password: {
-    type: String,
-    required: true
-  },
-  status: {
-    type: Number,
-    required: true
-  },
-  lastLogin: {
-    type: Date,
-    required: true
-  },
-  createdAt: {
-    type: Date,
-    required: true
-  },
-  updatedAt: {
-    type: Date,
-    required: true
-  }
+const Token = {
+  device: { type: String },
+  ip: { type: String },
+  refreshToken: { type: String },
+  createdAt: { type: Date, required: true },
+  updatedAt: { type: Date, required: true }
+}
+
+const UserSchema = new mongoose.Schema({
+  role: { type: Number, min: 0, max: 3 },
+  email: { type: String, required: true, unique: true },
+  username: { type: String, unique: true, sparse: true },
+  password: { type: String, required: true },
+  status: { type: Number, required: true },
+  token: { type: Token },
+  lastLogin: { type: Date, required: true },
+  createdAt: { type: Date, required: true },
+  updatedAt: { type: Date, required: true }
 })
+
+/**
+ * Indexing
+ */
+UserSchema.index({ email: 1 });
 
 /**
  * Virtual Property
@@ -53,11 +36,10 @@ UserSchema
   .virtual('userInfo')
   .get(() => {
     return {
-      _id: this._id,
-      userId: this.userId,
+      id: this._id,
       role: this.role,
       email: this.email,
-      userName: this.userName,
+      username: this.username,
       status: this.status,
       lastLogin: this.lastLogin,
       createdAt: this.createdAt,
@@ -87,7 +69,7 @@ UserSchema.path('email')
 
 // validate username duplication
 UserSchema.path('username')
-  .validate(function(value, response) {
+  .validate((value, response) => {
     mongoose.models['User'].findOne({'username': value}, (err, user) => {
       if(err) throw err
       if(user) return response(false)
@@ -98,17 +80,17 @@ UserSchema.path('username')
 /**
  * Pre Save
  */
-UserSchema.pre('save', (next) => {
-  if (!this.isNew) {
-    return next()
-  }
-  if (!isValidPassword(this.password)) {
-    next(new Error('Invalid password'))
-  }
-  next()
-})
+//UserSchema.pre('save', (next) => {
+//  if (!this.isNew) {
+//    return next()
+//  }
+//  if (!isValidPassword(this.password)) {
+//    next(new Error('Invalid password'))
+//  }
+//  next()
+//})
 
-var isValidPassword = (value) => (value && value.length)
+const isValidPassword = (value) => (value && value.length)
 
 // method
 UserSchema.methods = {
@@ -132,4 +114,15 @@ UserSchema.statics = {
   }
 }
 
-export default mongoose.model('User', UserSchema)
+const UserModel = mongoose.model('User', UserSchema)
+
+/**
+ * Constants
+ */
+
+UserModel.STATUS = {
+  INACTIVE: 0,
+  ACTIVE: 1
+}
+
+export default UserModel

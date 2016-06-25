@@ -3,23 +3,23 @@ import bcrypt from 'bcrypt'
 import moment from 'moment'
 import config from '../../config'
 import { log } from './../utils/devUtils'
-import User from '../data/models/User'
-import Token from '../data/models/Token'
+import constants from './../utils/constants'
+import { User } from '../data/model'
 
 export const loginUser = (email, password) => {
   log.info(`login user start: for user ${email}`)
-  return new Promise(function(resolve, reject) {
-    new User({
-      'email': email
-    })
-      .fetch()
-      .then((model) => {
-        if (model != null) {
-          const hash = model.get('password')
+  return new Promise((resolve, reject) => {
+    User.findOne({
+        'email': email
+      })
+      .exec()
+      .then((user) => {
+        if (user != null) {
+          const hash = user.get('password')
           const isValidPassword = bcrypt.compareSync(password, hash)
           if (isValidPassword) {
             log.info(`login user success: for user ${email}`)
-            const userId = model.get('user_id')
+            const userId = user.get('user_id')
             const token = generateToken()
             resolve({
               userId: userId,
@@ -37,15 +37,38 @@ export const loginUser = (email, password) => {
         log.error(`login user failed: ${error} for user ${email}`)
         reject(error)
       })
+
+  })
+}
+
+export const registerUser = (email, password) => {
+  return new Promise((resolve, reject) => {
+    const dbTimeNow = moment().format("YYYY-MM-DD HH:mm:ss")
+    const salt = bcrypt.genSaltSync(8) + config.auth.secret
+    const hash = bcrypt.hashSync(password, salt)
+
+    User.create({
+        email: email,
+        password: hash,
+        status: User.STATUS.ACTIVE,
+        lastLogin: dbTimeNow,
+        createdAt: dbTimeNow,
+        updatedAt: dbTimeNow
+      })
+      .then((user) => {
+        log.info(`register user success: for user: ${email}`)
+        resolve(user)
+      })
+      .catch((error) => {
+        log.error(`register user failed: ${error} for user ${email}`)
+        reject(error)
+      })
   })
 }
 
 export const hasUser = (email) => {
   return new Promise((resolve, reject) => {
-    new User({
-      'email': email
-    })
-      .fetch()
+    User.findOne({ email: email }).exec()
       .then((model) => {
         if (model != null) {
           resolve(true)
@@ -60,31 +83,6 @@ export const hasUser = (email) => {
   })
 }
 
-export const registerUser = (email, password) => {
-  log.info(`register user start: ${email}`)
-  return new Promise(function(resolve, reject) {
-    const dbTimeNow = moment().format("YYYY-MM-DD HH:mm:ss")
-    const salt = bcrypt.genSaltSync(8) + config.auth.secret
-    const hash = bcrypt.hashSync(password, salt)
-
-    new User({
-      email: email,
-      password: hash,
-      time_created: dbTimeNow,
-      time_updated: dbTimeNow
-    })
-      .save()
-      .then((model) => {
-        log.info(`register user success: for email: ${email}, user: ${email}`)
-        resolve(model)
-      })
-      .catch((error) => {
-        log.error(`register user failed: ${error} for user ${email}`)
-        reject(error)
-      })
-  })
-}
-
 const upsertRefreshToken = (userId , device = '') => {
   return new Promise(function(resolve, reject) {
     const refreshToken = generateRefreshToken(userId)
@@ -93,24 +91,17 @@ const upsertRefreshToken = (userId , device = '') => {
     const dbTimeNow = moment().format("YYYY-MM-DD HH:mm:ss")
 
     log.info(`upsert refreshToken start: for userId ${userId}`)
-    new Token({
-      user_id: userId,
-      device: device
-    })
-      .fetch()
-      .then((model) => {
-        if (model != null) {
-          model.where({user_id: userId}, true)
-            .save({
-                device: device,
-                refresh: hashedRefreshToken,
-                time_updated: dbTimeNow
-              },
-              { patch: true }
-            )
-            .then((model) => {
+    User.findOne({ id: userId })
+      .exec()
+      .then((user) => {
+        if (user != null) {
+          user.token.device = device
+          user.token.refreshToken = hashedRefreshToken
+          user.updatedAt = dbTimeNow
+          user.save()
+            .then((user) => {
               log.info(`update refreshToken success: for userId ${userId}`)
-              resolve(model.get('refresh'))
+              resolve(user)
             })
             .catch((error) => {
               log.error(`update refreshToken failed: ${error} for userId ${userId}`)
@@ -118,17 +109,17 @@ const upsertRefreshToken = (userId , device = '') => {
             })
         } else {
           // create new token
-          new Token({
-            user_id: userId,
+          const token = {
             device: device,
-            refresh: hashedRefreshToken,
-            time_created: dbTimeNow,
-            time_updated: dbTimeNow
-          })
-            .save()
-            .then((model) => {
+            refreshToken: hashedRefreshToken,
+            createdAt: dbTimeNow,
+            updatedAt: dbTimeNow
+          }
+          user.token = token
+          user.save()
+            .then((user) => {
               log.info(`insert refreshToken success: for userId ${userId}`)
-              resolve(model)
+              resolve(user)
             })
             .catch((error) => {
               log.error(`insert refreshToken failed: ${error} for userId ${userId}`)

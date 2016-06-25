@@ -18,7 +18,7 @@ import _debug from 'debug'
 import config from '../config'
 import _log from 'logfilename'
 import httpRequestHandler from './middleware/http-request-handler'
-import { publicApi, privateApi } from './api'
+import { publicApi, privateApi } from './controller'
 
 const debug = _debug('app:server')
 const log = _log(__filename, config.log)
