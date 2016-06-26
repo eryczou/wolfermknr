@@ -3,35 +3,35 @@ import jwt from 'koa-jwt'
 import config from '../../config'
 import { log } from '../utils/devUtils'
 import Constants from '../utils/constants'
-import authService from '../service/authService'
-import User from '../data/model/UserModel'
+import AuthService from '../service/AuthService'
+import User from '../model/UserModel'
 
 const auth = new Router()
 
 auth.post('/login', async (ctx, next) => {
   const { email, password, rememberMe } = ctx.request.body
   try {
-    const { userId, token } = await authService.loginUser(email, password)
+    const { userId, token } = await AuthService.loginUser(email, password)
     ctx.status = 200
     ctx.body = {
       payload: {
         user: {
-          user_id: userId
+          userId: userId
         }
       }
     }
 
     if (rememberMe) {
-      const refreshToken = await authService.upsertRefreshToken(userId)
+      const refreshToken = await AuthService.updateUserRefreshToken(userId)
       ctx.cookies.set('wfx_token', token, {
         httpOnly: true,
         overwrite: true,
-        expires: authService.getTokenExpireDate()
+        expires: AuthService.getTokenExpireDate()
       })
       ctx.cookies.set('wfx_refresh', refreshToken, {
         httpOnly: true,
         overwrite: true,
-        expires: authService.getRefreshTokenExpireDate()
+        expires: AuthService.getRefreshTokenExpireDate()
       })
     } else {
       ctx.cookies.set('wfx_token', token, {
@@ -48,23 +48,23 @@ auth.post('/login', async (ctx, next) => {
 auth.post('/register', async (ctx, next) => {
   let { email, password } = ctx.request.body
   try {
-    if (await authService.hasUser(email)) {
+    if (await AuthService.hasUser(email)) {
       log.info(`register user failed: duplicate email for ${email}`)
       ctx.status = 202
       ctx.body = {
         errorCode: Constants.errorCode.AUTH_DUPLICAT_EMAIL
       }
     } else {
-      const userModel = await authService.registerUser(email, password)
+      const userModel = await AuthService.registerUser(email, password)
       const userId = userModel.id
 
       if (userId) {
-        const token = authService.generateToken(userId)
+        const token = AuthService.generateToken(userId)
         ctx.status = 200
         ctx.body = {
           payload: {
             user: {
-              user_id: userId
+              userId: userId
             }
           }
         }
@@ -101,15 +101,15 @@ auth.get('/isLoggedIn', async (ctx, next) => {
       try {
         const decodeRefreshToken = jwt.verify(refreshToken, config.jwt.secret)
         const userId = decodeRefreshToken.userId
-        const storedRefreshToken = await authService.getRefreshToken(userId)
+        const storedRefreshToken = await AuthService.getRefreshToken(userId)
         if (storedRefreshToken == decodeRefreshToken) {
-          const newToken = authService.generateToken(userId)
+          const newToken = AuthService.generateToken(userId)
           ctx.status = 200
           ctx.body = { payload: 'User has already logged in' }
           ctx.cookies.set('wfx_token', newToken, {
             httpOnly: true,
             overwrite: true,
-            expires: authService.getTokenExpireDate()
+            expires: AuthService.getTokenExpireDate()
           })
         } else {
           ctx.status = 401

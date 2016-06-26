@@ -4,7 +4,7 @@ import moment from 'moment'
 import config from '../../config'
 import { log } from './../utils/devUtils'
 import constants from './../utils/constants'
-import { User } from '../data/model'
+import { User, Token } from '../model'
 
 export const loginUser = (email, password) => {
   log.info(`login user start: for user ${email}`)
@@ -15,11 +15,11 @@ export const loginUser = (email, password) => {
       .exec()
       .then((user) => {
         if (user != null) {
-          const hash = user.get('password')
+          const hash = user.password
           const isValidPassword = bcrypt.compareSync(password, hash)
           if (isValidPassword) {
             log.info(`login user success: for user ${email}`)
-            const userId = user.get('user_id')
+            const userId = user.id
             const token = generateToken()
             resolve({
               userId: userId,
@@ -83,7 +83,7 @@ export const hasUser = (email) => {
   })
 }
 
-const upsertRefreshToken = (userId , device = '') => {
+const updateUserRefreshToken = (userId , device = '') => {
   return new Promise(function(resolve, reject) {
     const refreshToken = generateRefreshToken(userId)
     const tokenSalt = bcrypt.genSaltSync(1)
@@ -91,15 +91,20 @@ const upsertRefreshToken = (userId , device = '') => {
     const dbTimeNow = moment().format("YYYY-MM-DD HH:mm:ss")
 
     log.info(`upsert refreshToken start: for userId ${userId}`)
-    User.findOne({ id: userId })
-      .exec()
+    User.findByIdAndUpdate(userId, {updatedAt: dbTimeNow})
       .then((user) => {
         if (user != null) {
-          user.token.device = device
-          user.token.refreshToken = hashedRefreshToken
+          const token = new Token
+          token.device = device
+          token.refreshToken = hashedRefreshToken
+          token.updatedAt = dbTimeNow
+          //user.token = token
           user.updatedAt = dbTimeNow
-          user.save()
+          console.log(user)
+          user.update({_id: userId}, user)
+            .exec()
             .then((user) => {
+              console.log(user)
               log.info(`update refreshToken success: for userId ${userId}`)
               resolve(user)
             })
@@ -108,23 +113,8 @@ const upsertRefreshToken = (userId , device = '') => {
               reject(error)
             })
         } else {
-          // create new token
-          const token = {
-            device: device,
-            refreshToken: hashedRefreshToken,
-            createdAt: dbTimeNow,
-            updatedAt: dbTimeNow
-          }
-          user.token = token
-          user.save()
-            .then((user) => {
-              log.info(`insert refreshToken success: for userId ${userId}`)
-              resolve(user)
-            })
-            .catch((error) => {
-              log.error(`insert refreshToken failed: ${error} for userId ${userId}`)
-              reject(error)
-            })
+          log.error(`upsert refreshToken failed: do not find user with userID: ${userId}`)
+          reject(`failed to remember user login`)
         }
       })
       .catch((error) => {
@@ -137,7 +127,7 @@ const upsertRefreshToken = (userId , device = '') => {
 export const getRefreshToken = (userId, device = '') => {
   return new Promise(function(resolve, reject) {
     new Token({
-      user_id: userId,
+      userId: userId,
       device: device
     })
       .fetch()
@@ -181,7 +171,7 @@ export const getRefreshTokenExpireDate = () => {
 
 export default ({
   registerUser,
-  upsertRefreshToken,
+  updateUserRefreshToken,
   hasUser,
   loginUser,
   generateToken,

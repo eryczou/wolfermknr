@@ -1,17 +1,11 @@
 // server/data/mongoose/user.js
 import mongoose from 'mongoose'
+import TokenEntity from './Token'
 
 /**
  * User Schema
  */
-const Token = {
-  device: { type: String },
-  ip: { type: String },
-  refreshToken: { type: String },
-  createdAt: { type: Date, required: true },
-  updatedAt: { type: Date, required: true }
-}
-
+const Token = new TokenEntity
 const UserSchema = new mongoose.Schema({
   role: { type: Number, min: 0, max: 3 },
   email: { type: String, required: true, unique: true },
@@ -80,15 +74,19 @@ UserSchema.path('username')
 /**
  * Pre Save
  */
-//UserSchema.pre('save', (next) => {
-//  if (!this.isNew) {
-//    return next()
-//  }
-//  if (!isValidPassword(this.password)) {
-//    next(new Error('Invalid password'))
-//  }
-//  next()
-//})
+UserSchema.pre('save', (next) => {
+  console.log('hello')
+  if (!this.isNew) {
+    console.log('isOld')
+    return next()
+  }
+  console.log('isNew')
+
+  if (!isValidPassword(this.password)) {
+    next(new Error('Invalid password'))
+  }
+  next()
+})
 
 const isValidPassword = (value) => (value && value.length)
 
