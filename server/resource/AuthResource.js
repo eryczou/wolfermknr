@@ -55,10 +55,10 @@ auth.post('/register', async (ctx, next) => {
         errorCode: Constants.errorCode.AUTH_DUPLICAT_EMAIL
       }
     } else {
-      const userModel = await AuthService.registerUser(email, password)
-      const userId = userModel.id
+      const user = await AuthService.registerUser(email, password)
 
-      if (userId) {
+      if (user) {
+        const userId = user.id
         const token = AuthService.generateToken(userId)
         ctx.status = 200
         ctx.body = {
