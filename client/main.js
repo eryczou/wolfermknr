@@ -9,6 +9,7 @@ import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Root from './containers/Root'
+import { AppContainer } from 'react-hot-loader'
 
 // ========================================================
 // Browser History Setup
@@ -41,16 +42,19 @@ if (false && __DEBUG__) {
 // ========================================================
 const MOUNT_NODE = document.getElementById('root')
 
-let render = (routerKey = null) => {
-  const routes = require('./routes/index').default(store)
+const render = (routerKey = null) => {
+  const nextRoutes = require('./routes/index').default(store)
+  const Root = require('./containers/Root').default
   ReactDOM.render(
     <MuiThemeProvider muiTheme={getMuiTheme(darkBaseTheme)}>
-      <Root
-        store={store}
-        history={history}
-        routes={routes}
-        routerKey={routerKey}
-      />
+      <AppContainer>
+        <Root
+          store={store}
+          history={history}
+          routes={nextRoutes}
+          routerKey={routerKey}
+        />
+      </AppContainer>,
     </MuiThemeProvider>,
     MOUNT_NODE
   )
@@ -59,20 +63,10 @@ let render = (routerKey = null) => {
 // Enable HMR and catch runtime errors in RedBox
 // This code is excluded from production bundle
 if (__DEV__ && module.hot) {
-  const renderApp = render
-  const renderError = (error) => {
-    const RedBox = require('redbox-react')
-
-    ReactDOM.render(<RedBox error={error} />, MOUNT_NODE)
-  }
-  render = () => {
-    try {
-      renderApp(Math.random())
-    } catch (error) {
-      renderError(error)
-    }
-  }
-  module.hot.accept(['./routes/index'], () => render())
+  module.hot.accept([
+    './containers/Root',
+    './routes/index'
+  ], () => render(Date.now()))
 }
 
 // ========================================================

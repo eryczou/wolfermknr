@@ -31,7 +31,10 @@ const APP_ENTRY_PATHS = [
 
 webpackConfig.entry = {
   app: __DEV__
-    ? APP_ENTRY_PATHS.concat(`webpack-hot-middleware/client?path=${config.compiler_public_path}__webpack_hmr`)
+    ? [
+    'react-hot-loader/patch',
+    `webpack-hot-middleware/client?path=${config.compiler_public_path}__webpack_hmr`
+    ].concat(APP_ENTRY_PATHS)
     : APP_ENTRY_PATHS,
   vendor: config.compiler_vendor
 }
@@ -108,9 +111,12 @@ webpackConfig.module.loaders = [{
   loader: 'babel',
   query: {
     cacheDirectory: true,
-    plugins: ['transform-runtime', 'lodash'],
+    plugins: ['transform-runtime', 'lodash', 'react-hot-loader/babel'],
     presets: ['es2015', 'react', 'stage-0'],
     env: {
+      development: {
+        plugins: ['react-hot-loader/babel']
+      },
       production: {
         presets: ['react-optimize']
       }
