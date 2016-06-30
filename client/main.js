@@ -54,7 +54,7 @@ const render = (routerKey = null) => {
           routes={nextRoutes}
           routerKey={routerKey}
         />
-      </AppContainer>,
+      </AppContainer>
     </MuiThemeProvider>,
     MOUNT_NODE
   )

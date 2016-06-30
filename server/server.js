@@ -4,6 +4,7 @@ import jwt from 'koa-jwt'
 import proxy from 'koa-proxy'
 import bodyParser from 'koa-bodyparser'
 import serve from 'koa-static'
+import redis from 'koa-redis'
 import cors from 'kcors'
 import historyApiFallback from 'koa-connect-history-api-fallback'
 
@@ -70,7 +71,9 @@ if (config.env === 'development') {
   debug('Server is running on development mode.')
 } else {
   debug('Server is running on production mode.')
-  app.use(serve(paths.dist()))
+  app.use(serve(paths.dist(), {
+    maxage: config.static.caching_time
+  }))
 }
 
 // Custom 401 handling if you don't want to expose koa-jwt errors to users
@@ -91,11 +94,13 @@ app.use(convert(cors({
 
 // public api
 app.use(publicApi.routes())
+app.use(publicApi.allowedMethods())
 
 // jwt validation
 app.use(convert(jwt({ secret: config.jwt.secret, key: 'jwtdata' })))
 
 // private api
 app.use(privateApi.routes())
+app.use(privateApi.allowedMethods())
 
 export default app
